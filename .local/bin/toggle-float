@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Smart floating toggle for Hyprland
+# Toggles floating and ensures proper centering/sizing
+
+# Get current window state
+WINDOW_INFO=$(hyprctl activewindow -j)
+IS_FLOATING=$(echo "$WINDOW_INFO" | jq -r '.floating')
+WORKSPACE_ID=$(echo "$WINDOW_INFO" | jq -r '.workspace.id')
+
+if [[ "$IS_FLOATING" == "true" ]]; then
+    # If already floating, just toggle back to tiled
+    hyprctl dispatch togglefloating
+else
+    # If tiled, make it float with proper size and center
+    hyprctl dispatch togglefloating
+    sleep 0.1  # Small delay to ensure state change
+    hyprctl dispatch resizeactive exact 80% 80%
+    hyprctl dispatch centerwindow
+fi

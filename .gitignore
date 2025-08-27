@@ -1,0 +1,37 @@
+# Ignore everything by default
+/*
+
+# Track specific config directories
+!/.config/
+/.config/*
+!/.config/hypr/
+!/.config/kitty/
+!/.config/omarchy/
+
+# Track specific files
+!/.gitignore
+!/README.md
+!/.local/
+/.local/*
+!/.local/bin/
+/.local/bin/*
+!/.local/bin/toggle-float
+!/.local/bin/omarchy-generate-kitty-theme
+
+# Ignore backups and temp files
+*.bak
+*.bak.*
+*.swp
+*~
+.DS_Store
+
+# Ignore sensitive files
+*.key
+*.pem
+secrets/
+private/
+
+# Ignore cache
+.cache/
+__pycache__/
+node_modules/
