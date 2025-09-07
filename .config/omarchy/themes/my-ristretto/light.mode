@@ -1,0 +1,4 @@
+# This file indicates that my-ristretto should use light mode
+# When omarchy-theme-set runs, it will set:
+# - color-scheme to "prefer-light" 
+# - gtk-theme to "Adwaita" (instead of "Adwaita-dark")
