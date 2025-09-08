@@ -1,0 +1,10 @@
+#!/bin/bash
+# Launch chromium with user-defined flags from ~/.config/chromium-flags.conf
+
+FLAGS=""
+if [ -f "$HOME/.config/chromium-flags.conf" ]; then
+    # Read flags from config file, skip comments and empty lines
+    FLAGS=$(grep -v '^#' "$HOME/.config/chromium-flags.conf" | grep -v '^$' | tr '\n' ' ')
+fi
+
+exec /usr/bin/chromium $FLAGS "$@"
