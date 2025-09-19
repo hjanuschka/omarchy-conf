@@ -2,13 +2,14 @@
 Description=Graceful Chromium shutdown for Omarchy
 DefaultDependencies=no
 Before=shutdown.target reboot.target halt.target
+Conflicts=shutdown.target reboot.target halt.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/bin/true
-ExecStop=/bin/bash -c 'for proc in chromium chromium-browser chrome google-chrome; do pkill -TERM "$proc" 2>/dev/null || true; done; sleep 3; for proc in chromium chromium-browser chrome google-chrome; do pkill -KILL "$proc" 2>/dev/null || true; done'
-TimeoutStopSec=10
+ExecStop=/bin/bash -c 'echo "Gracefully shutting down Chromium processes..."; for proc in chromium chromium-browser chrome google-chrome; do pkill -TERM "$proc" 2>/dev/null && echo "Sent SIGTERM to $proc" || true; done; sleep 3; for proc in chromium chromium-browser chrome google-chrome; do pkill -KILL "$proc" 2>/dev/null && echo "Force killed $proc" || true; done; echo "Chromium shutdown complete"'
+TimeoutStopSec=15
 
 [Install]
 WantedBy=default.target
