@@ -4,6 +4,9 @@ echo "Adding graceful Chromium shutdown service"
 mkdir -p ~/.config/systemd/user
 cp ~/.local/share/omarchy/config/systemd/user/omarchy-chromium-shutdown.service ~/.config/systemd/user/
 
+# Enable user lingering so service runs during shutdown
+sudo loginctl enable-linger $USER 2>/dev/null || echo "Note: Could not enable lingering automatically, may need manual setup"
+
 # Reload systemd daemon and enable the service
 systemctl --user daemon-reload
 systemctl --user enable omarchy-chromium-shutdown.service
