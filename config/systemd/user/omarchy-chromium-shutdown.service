@@ -1,8 +1,9 @@
 [Unit]
 Description=Graceful Chromium shutdown for Omarchy
 DefaultDependencies=no
-Before=shutdown.target reboot.target halt.target
+Before=shutdown.target reboot.target halt.target wayland-wm@hyprland.desktop.service
 Conflicts=shutdown.target reboot.target halt.target
+PartOf=wayland-session@hyprland.desktop.target
 
 [Service]
 Type=oneshot
@@ -12,4 +13,4 @@ ExecStop=/bin/bash -c 'echo "Gracefully shutting down Chromium processes..."; fo
 TimeoutStopSec=15
 
 [Install]
-WantedBy=default.target
+WantedBy=wayland-session@hyprland.desktop.target
