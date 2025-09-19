@@ -1,0 +1,17 @@
+[Unit]
+Description=Graceful Chromium shutdown for Omarchy (system-wide)
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target multi-user.target graphical.target
+Conflicts=shutdown.target reboot.target halt.target
+RequiresMountsFor=/home
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/true
+ExecStop=/usr/local/bin/omarchy-chromium-shutdown-system
+TimeoutStopSec=30
+User=root
+
+[Install]
+WantedBy=multi-user.target graphical.target

@@ -1,24 +1,19 @@
-echo "Adding graceful Chromium shutdown service"
+echo "Adding graceful Chromium shutdown service (system-wide)"
 
-# Copy the systemd service file to user systemd directory
-mkdir -p ~/.config/systemd/user
-cp ~/.local/share/omarchy/config/systemd/user/omarchy-chromium-shutdown.service ~/.config/systemd/user/
+# Disable old user service if it exists
+systemctl --user disable omarchy-chromium-shutdown.service 2>/dev/null || true
+systemctl --user stop omarchy-chromium-shutdown.service 2>/dev/null || true
 
-# Copy the helper script to user bin directory
-mkdir -p ~/.local/bin
-cp ~/.local/share/omarchy/bin/omarchy-chromium-shutdown-helper ~/.local/bin/
-chmod +x ~/.local/bin/omarchy-chromium-shutdown-helper
+# Copy the system service file
+sudo cp ~/.local/share/omarchy/config/systemd/system/omarchy-chromium-shutdown.service /etc/systemd/system/
 
-# Enable user lingering so service runs during shutdown
-sudo loginctl enable-linger $USER 2>/dev/null || echo "Note: Could not enable lingering automatically, may need manual setup"
+# Copy the system helper script
+sudo cp ~/.local/share/omarchy/bin/omarchy-chromium-shutdown-system /usr/local/bin/
+sudo chmod +x /usr/local/bin/omarchy-chromium-shutdown-system
 
-# Reload systemd daemon and enable the service
-systemctl --user daemon-reload
-systemctl --user enable omarchy-chromium-shutdown.service
+# Reload system daemon and enable the service
+sudo systemctl daemon-reload
+sudo systemctl enable omarchy-chromium-shutdown.service
+sudo systemctl start omarchy-chromium-shutdown.service
 
-# Start the service if we're in a Wayland session
-if [[ "$XDG_SESSION_TYPE" == "wayland" ]]; then
-    systemctl --user start omarchy-chromium-shutdown.service
-fi
-
-echo "Chromium graceful shutdown service installed and enabled"
+echo "System-wide Chromium graceful shutdown service installed and enabled"

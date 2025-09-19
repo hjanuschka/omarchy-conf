@@ -1,0 +1,71 @@
+#!/bin/bash
+# System-wide Chromium graceful shutdown for Omarchy
+# Runs as root during early shutdown to close Chromium for all users
+
+echo "System-wide Chromium graceful shutdown starting..."
+
+# Find all users with active Chromium processes
+CHROMIUM_USERS=$(ps aux | grep -E "(chromium|chrome)" | grep -v grep | awk '{print $1}' | sort -u)
+
+for user in $CHROMIUM_USERS; do
+    if [ "$user" = "root" ]; then
+        continue
+    fi
+
+    echo "Processing Chromium processes for user: $user"
+
+    # Get user's home directory and UID
+    USER_HOME=$(getent passwd "$user" | cut -d: -f6)
+    USER_UID=$(id -u "$user" 2>/dev/null)
+
+    if [ -z "$USER_UID" ] || [ -z "$USER_HOME" ]; then
+        echo "Could not get info for user $user, skipping"
+        continue
+    fi
+
+    # Try to gracefully close via Hyprland if user has it running
+    if pgrep -u "$user" Hyprland >/dev/null 2>&1; then
+        echo "Attempting to close Chromium windows for $user via Hyprland..."
+
+        # Run as the user to close windows
+        sudo -u "$user" bash -c '
+            export HYPRLAND_INSTANCE_SIGNATURE=$(ls -1 /tmp/hypr/ 2>/dev/null | head -1)
+            if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
+                export HYPRLAND_INSTANCE_SIGNATURE
+                hyprctl clients -j 2>/dev/null | jq -r ".[] | select(.class | test(\"chromium|chrome\"; \"i\")) | .address" 2>/dev/null | while IFS= read -r addr; do
+                    if [ -n "$addr" ]; then
+                        echo "Closing window: $addr"
+                        hyprctl dispatch closewindow "address:$addr" 2>/dev/null || true
+                    fi
+                done
+            fi
+        ' 2>/dev/null || true
+
+        echo "Waiting 5 seconds for graceful window closure..."
+        sleep 5
+    fi
+
+    # Send SIGTERM to remaining Chromium processes for this user
+    echo "Sending SIGTERM to remaining Chromium processes for $user..."
+    pkill -TERM -u "$user" chromium 2>/dev/null || true
+    pkill -TERM -u "$user" chrome 2>/dev/null || true
+
+done
+
+if [ -n "$CHROMIUM_USERS" ]; then
+    echo "Waiting 8 seconds for all Chromium processes to terminate gracefully..."
+    sleep 8
+
+    # Force kill any remaining processes
+    echo "Force killing any remaining Chromium processes..."
+    for user in $CHROMIUM_USERS; do
+        if [ "$user" != "root" ]; then
+            pkill -KILL -u "$user" chromium 2>/dev/null || true
+            pkill -KILL -u "$user" chrome 2>/dev/null || true
+        fi
+    done
+else
+    echo "No Chromium processes found"
+fi
+
+echo "System-wide Chromium shutdown complete"
