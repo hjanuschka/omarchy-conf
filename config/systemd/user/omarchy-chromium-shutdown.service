@@ -9,7 +9,7 @@ PartOf=wayland-session@hyprland.desktop.target
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/bin/true
-ExecStop=/bin/bash -c 'echo "Gracefully shutting down Chromium processes..."; if command -v hyprctl >/dev/null 2>&1; then echo "Closing Chromium windows via Hyprland..."; hyprctl clients -j | jq -r ".[] | select(.class | test(\"chromium|chrome\"; \"i\")) | .address" | while read addr; do hyprctl dispatch closewindow "address:$addr" 2>/dev/null || true; done; sleep 3; fi; echo "Sending SIGTERM to remaining processes..."; for proc in chromium chromium-browser chrome google-chrome; do pkill -TERM "$proc" 2>/dev/null && echo "Sent SIGTERM to $proc" || true; done; sleep 5; echo "Force killing any remaining processes..."; for proc in chromium chromium-browser chrome google-chrome; do pkill -KILL "$proc" 2>/dev/null && echo "Force killed $proc" || true; done; echo "Chromium shutdown complete"'
+ExecStop=/home/arch/.local/bin/omarchy-chromium-shutdown-helper
 TimeoutStopSec=20
 
 [Install]

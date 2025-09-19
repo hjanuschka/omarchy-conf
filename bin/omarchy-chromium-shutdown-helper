@@ -1,0 +1,44 @@
+#!/bin/bash
+# Chromium graceful shutdown helper for Omarchy
+# This script ensures Chromium closes properly before system shutdown
+
+echo "Gracefully shutting down Chromium processes..."
+
+# Step 1: Try to close windows gracefully via Hyprland
+if command -v hyprctl >/dev/null 2>&1 && [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
+    echo "Closing Chromium windows via Hyprland..."
+
+    # Get all Chromium window addresses and close them
+    hyprctl clients -j 2>/dev/null | jq -r '.[] | select(.class | test("chromium|chrome"; "i")) | .address' 2>/dev/null | while IFS= read -r addr; do
+        if [ -n "$addr" ]; then
+            echo "Closing window: $addr"
+            hyprctl dispatch closewindow "address:$addr" 2>/dev/null || true
+        fi
+    done
+
+    echo "Waiting 3 seconds for windows to close gracefully..."
+    sleep 3
+else
+    echo "Hyprland not available, skipping window close step"
+fi
+
+# Step 2: Send SIGTERM to remaining processes
+echo "Sending SIGTERM to remaining Chromium processes..."
+for proc in chromium chromium-browser chrome google-chrome; do
+    if pkill -TERM "$proc" 2>/dev/null; then
+        echo "Sent SIGTERM to $proc"
+    fi
+done
+
+echo "Waiting 5 seconds for processes to terminate gracefully..."
+sleep 5
+
+# Step 3: Force kill any stubborn processes
+echo "Force killing any remaining processes..."
+for proc in chromium chromium-browser chrome google-chrome; do
+    if pkill -KILL "$proc" 2>/dev/null; then
+        echo "Force killed $proc"
+    fi
+done
+
+echo "Chromium shutdown complete"
