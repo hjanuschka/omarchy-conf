@@ -10,6 +10,10 @@ sudo loginctl enable-linger $USER 2>/dev/null || echo "Note: Could not enable li
 # Reload systemd daemon and enable the service
 systemctl --user daemon-reload
 systemctl --user enable omarchy-chromium-shutdown.service
-systemctl --user start omarchy-chromium-shutdown.service
+
+# Start the service if we're in a Wayland session
+if [[ "$XDG_SESSION_TYPE" == "wayland" ]]; then
+    systemctl --user start omarchy-chromium-shutdown.service
+fi
 
 echo "Chromium graceful shutdown service installed and enabled"
